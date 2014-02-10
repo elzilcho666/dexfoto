@@ -1,5 +1,5 @@
 # DextrousFOTO
-## By Adam Jeanes
+
 
 ## About
 
@@ -9,8 +9,8 @@ This web application allows for searching Instagram by hashtag and to mark certa
 
 The web app server requires a configuration file in a file called settings.json which is a sing JSON string containing your Instagram Client ID and your Instagram Secret and is laid out as such:
 
-...
+```
 {"Client_Secret": "YOUR_CLIENT_SECRET", "Client_ID": "YOUR_CLIENT_ID"}
-...
+```
 
 The web app is currently configured to obtain the settings from my personal server and will require changing at lines 17 and 36
