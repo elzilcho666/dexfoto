@@ -1,0 +1,32 @@
+<html>
+   <head>
+       <title>DexFOTO - Authentication</title>
+   </head>
+   <body>
+       <script>
+       function getQ(key){
+        var URL = document.URL;
+        var queries = URL.split('#');
+        var qob = queries[1].split('=');
+        if(qob[0] == key){
+          return qob[1]
+        }
+        else{
+          return '0';
+        }
+       }
+       var accesstoken = getQ('access_token');
+
+        if(typeof(localStorage.clientID) == 'undefined'){
+          localStorage.clientID = accesstoken;
+          window.location.href = 'site.html';
+        }
+        else{
+          window.location.href = 'site.html';
+        }
+        
+       </script>
+       <div id="main"></div>
+   </body>
+</html>
+

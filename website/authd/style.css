@@ -1,0 +1,59 @@
+body{
+	font-family: "Helvetica", Arial, Sans-Serif;
+	background-color: #46483e;
+	color: #F8F7F7;
+	border-top:6px #ff0066 solid;
+	margin:0;
+}
+a:link {color:#ffffff; text-decoration:none; background-color:#000000; padding-left:5px; padding-right:5px;}
+a:visited {color:#ffffff; text-decoration:none; background-color:#000000; padding-left:5px; padding-right:5px;}
+a:hover {color:#ffffff; text-decoration:none; background-color:#ff0066; padding-left:5px; padding-right:5px;}
+a:active {color:#ff0066; text-decoration:none; background-color:#ffffff; padding-left:5px; padding-right:5px;}
+#img{
+	padding-bottom: 10px;
+	padding-right: 10px;
+	background-color: #ff0066;
+	float:left;
+}
+#info{
+	background-color: #33342d;
+	width:100%;
+
+}
+#userImg{
+	float: top-right;
+}
+#titleText{
+	float: left;
+}
+#titleIMG{
+	float: left;
+}
+.infobar{
+	width:100%;
+}
+#searchbox{
+	float:right;
+}
+#hash-search{
+	background-color: #46483e;
+	color: #F8F7F7;
+}
+#hashBtn{
+	background-color: #46483e;
+	color: #F8F7F7;
+}
+#bigimage{
+	float:center;
+	margin-left: auto;
+	margin-right: auto;
+}
+.nxtPage{
+	float:right;
+}
+td{
+	vertical-align: top;
+}
+table{
+	float:bottom;
+}

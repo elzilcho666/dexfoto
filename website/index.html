@@ -1,0 +1,35 @@
+<html>
+   <head>
+       <title>DexFOTO - Welcome</title>
+       <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+       <link rel="stylesheet" type="text/css" href="style.css">
+   </head>
+   <body>
+       <script>
+       if(typeof(localStorage.clientID) != 'undefined'){
+        window.location.replace('authd/site.html')
+       }
+       var clientID;
+       var redirectURL = 'http://useless-no.de/dexfoto/authd'
+       function getClientID(){
+        var parseID = function(data){
+          clientID = data.Client_ID;
+          //alert(Object.keys(data));
+          $('#startLink').attr('href', 'https://api.instagram.com/oauth/authorize/?client_id=' + data.Client_ID + '&redirect_uri=' + redirectURL + '&response_type=token')
+
+        }
+        $.ajax({
+          url:"http://useless-no.de:9090/getID",
+          type:"get",
+          datatype:"jsonp",
+          success:parseID
+        });
+       }
+       $(document).ready(function(){
+           getClientID();
+       });
+       </script>
+       <div id="main"><h1>DextrousFOTO</h1><br>An Instagram searching web application<br>Click get started and Log in/authorize the site to access Instagram to get started.<div id="getStarted"><h1><a href="" id="startLink">Get Started</a></h1></div></div>
+   </body>
+</html>
+

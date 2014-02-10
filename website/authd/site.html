@@ -1,0 +1,256 @@
+<!doctype html>
+<html>
+   <head>
+       <title>DexFOTO - Site</title>
+       <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+       <link rel="stylesheet" type="text/css" href="style.css">
+   </head>
+   <body>
+       <script>
+       var clientID = localStorage.clientID
+       var removed_images;
+       var favourite_images;
+       var currentuser = new Object();
+       var settings = new Object();
+       function saveSettings(){
+        $.ajax({
+          url:'http://useless-no.de:9090/save',
+          type:'post',
+          crossDomain: true,
+          dataType: 'json',
+          data:{'id':currentuser['data']['id'], 'settings':JSON.stringify(settings)}
+        });
+       }
+       function loadSettings(my_id){
+        var putsettings = function(data){
+          if(typeof(data.uerror) == 'undefined'){
+            settings = JSON.parse(data);
+          }
+          else{
+            settings.removed_images = [];
+            settings.favourite_images = [];
+            saveSettings(); //do this to create user entry to prevent further confusion
+          }
+        }
+          $.ajax({
+            url:'http://useless-no.de:9090/load',
+            type:'get',
+            crossDomain: true,
+            dataType:'json',
+            data:{'id':my_id},
+            success:putsettings
+          });
+        
+       }
+
+       getCurrentUser();
+       function popuser(data){
+        currentuser = data;
+        $('#username').text('Hi, ' + currentuser['data']['id'] + '! ');
+        loadSettings(currentuser['data']['id']);
+       }
+       function getCurrentUser(){
+        $.ajax({
+          url:'https://api.instagram.com/v1/users/self',
+          type:'get',
+          crossDomain:true,
+          dataType:'jsonp',
+          data:{'access_token':clientID, 'callback':'popuser'}
+        });
+       }
+       function favourite_image(e, image_id){
+        e.preventDefault();
+        settings.favourite_images.push(image_id);
+        saveSettings();
+        $('.fav_' + image_id).attr('onclick', 'unfavourite_image_main(event, "' + image_id + '")');
+        $('.fav_' + image_id).text('Favourited');
+        $('.fav_' + image_id).css('background-color', '#ff0066');
+       }
+       function unfavourite_image(e, image_id){
+        e.preventDefault();
+        $('#' + image_id).fadeOut();
+        var todelete = settings.favourite_images.indexOf(image_id);
+        if(todelete > -1){
+          settings.favourite_images.splice(todelete, 1);
+          saveSettings();
+        }
+       }
+       function unfavourite_image_main(e, image_id){
+        e.preventDefault();
+        var todelete = settings.favourite_images.indexOf(image_id);
+        if(todelete > -1){
+          settings.favourite_images.splice(todelete, 1);
+          saveSettings()
+        }
+        $('.fav_' + image_id).attr('onclick', 'favourite_image(event, "' + image_id + '")');
+        $('.fav_' + image_id).text('Favourite');
+        $('.fav_' + image_id).css('background-color', '#000000');
+       }
+       function remove_Entry(e, image_id){
+        e.preventDefault();
+        $('#' + image_id).fadeOut();
+        settings.removed_images.push(image_id);
+        saveSettings();
+       }
+       function unblock_image(e, id){
+        e.preventDefault();
+        $('#' + id).fadeOut();
+        var todelete = settings.removed_images.indexOf(id);
+        if (todelete > -1){
+          settings.removed_images.splice(todelete, 1);
+          saveSettings();
+        }
+       }
+       function about_Page(){
+        $('#imgs').empty();
+        $('#imgs').append('<h1>DextrousFOTO by Adam Jeanes</h1><br>Hand built in 4 days with javascript/jQuery and with a back end written in python/twisted. This was meant to be just an Instagram scraper but on discovering the API, I just had to make use of all the information it provided').fadeIn();
+       }
+       function put_images(insta){
+        $('#imgs').append('<a href="#" class="nxtPage" onclick="nextPage(\'' + insta['pagination']['next_url'] + '\')">Next Page</a>');
+        $('#imgs').append('<table id="resultTable">');
+        $.each(insta['data'], function(index, value){
+          if(jQuery.inArray(value['id'], settings.removed_images) == -1){
+            //try/catch thing because some images have null caption data,
+            try{
+            $('#imgs').append('<tr class="row" id="'+ value['id'] +'"><td><div id="img"><a href="#" onclick="showbigimage(\'' + value['id'] + '\')"><img src="' + value['images']['thumbnail']['url'] + '"></a></div></td><td class="infobar"><div id="info"><h3>' + linkhashtags(value['caption']['text']) + '</h3><br><a href="' + value['link'] +'">View on Instagram</a><a href="#" class="fav_' + value['id'] + '" onclick="favourite_image(event, \'' + value['id'] + '\')">Favourite</a><a href="#" onclick="remove_Entry(event, \'' + value['id'] + '\')">Remove</a></div></td><td><div id="userinfo"><img src="' + value['user']['profile_picture'] + '" height="64" width="64" id="userImg"> <br>' + value['user']['full_name'] + '<br> (' + value['user']['username'] + ')</div></td></tr>');
+            if(jQuery.inArray(value['id'], settings.favourite_images) != -1){
+              $('.fav_' + value['id']).attr('onclick', 'unfavourite_image_main(event, "' + value['id'] + '")');
+              $('.fav_' + value['id']).text('Favourited');
+              $('.fav_' + value['id']).css('background-color', '#ff0066');
+            }
+          }
+          catch(err){
+            $('#imgs').append('<tr class="row" id="'+ value['id'] +'"><td><div id="img"><a href="#" onclick="showbigimage(\'' + value['id'] + '\')"><img src="' + value['images']['thumbnail']['url'] + '"></a></div></td><td class="infobar"><div id="info"><h3>[Site Notice: No caption found]</h3><br><a href="' + value['link'] +'">View on Instagram</a><a href="#" class="fav_' + value['id'] + '" onclick="favourite_image(event, \'' + value['id'] + '\')">Favourite</a><a href="#" onclick="remove_Entry(event, \'' + value['id'] + '\')">Remove</a></div></td><td><div id="userinfo"><img src="' + value['user']['profile_picture'] + '" height="64" width="64" id="userImg"> <br>' + value['user']['full_name'] + '<br> (' + value['user']['username'] + ')</div></td></tr>');
+            if(jQuery.inArray(value['id'], settings.favourite_images) != -1){
+              $('.fav_' + value['id']).attr('onclick', 'unfavourite_image_main(event, "' + value['id'] + '")');
+              $('.fav_' + value['id']).text('Favourited');
+              $('.fav_' + value['id']).css('background-color', '#ff0066');
+            }
+          }
+        }
+        });
+        $('#imgs').append('<a href="#" class="nxtPage" onclick="nextPage(\'' + insta['pagination']['next_url'] + '\')">Next Page</a>');
+        $('#imgs').append('</table>');
+       }
+       function addsingleimageremove(data){
+
+        $('#imgs').append('<tr class="row" id="' + data['data']['id'] + '"><td><div id="img"><a href="#" onclick="showbigimage(\'' + data['data']['id'] + '\')"><img src="' + data['data']['images']['thumbnail']['url'] + '"></a></div></td><td><div id="info"><h3>' + linkhashtags(data['data']['caption']['text']) + '</h3><br><a href="' + data['data']['link'] + '">View on Instagram</a><a href="#" onclick="unblock_image(event, \'' + data['data']['id'] + '\')">Unblock image</a></div></td><td><div id="userinfo"><img src="' + data['data']['user']['profile_picture'] + '" height="64" width="64" id="userImg"> <br> ' + data['data']['user']['full_name'] + '<br> (' + data['data']['user']['username'] + ')</div></td></tr>');
+       }
+       function addsingleimagefavourite(data){
+        $('#imgs').append('<tr class="row" id="' + data['data']['id'] + '"><td><div id="img"><a href="#" onclick="showbigimage(\'' + data['data']['id'] + '\')"><img src="' + data['data']['images']['thumbnail']['url'] + '"></a></div></td><td><div id="info"><h3>' + linkhashtags(data['data']['caption']['text']) + '</h3><br><a href="' + data['data']['link'] + '">View on Instagram</a><a href="#" onclick="unfavourite_image(event, \'' + data['data']['id'] + '\')">Unfavourite image</a></div></td><td><div id="userinfo"><img src="' + data['data']['user']['profile_picture'] + '" height="64" width="64" id="userImg"> <br> ' + data['data']['user']['full_name'] + '<br> (' + data['data']['user']['username'] + ')</div></td></tr>');
+       }
+       function nextPage(nexturl){
+        $('#imgs').empty();
+
+        $.ajax({
+          url:nexturl,
+          type:'get',
+          crossDomain:true,
+          dataType:'jsonp',
+          data:{'access_token':clientID, 'callback':'put_images'}
+        });
+       }
+       function hashtaglink(hashtag){
+        var neutag = hashtag.substring(1);
+        Instagram_object(neutag);
+
+       }
+       function linkhashtags(text){
+        var hashtag_expression = /(#\S*\w)/ig;
+        var linkedtext = text.replace(hashtag_expression, '<a href="#" onclick="hashtaglink(\'$1\')">$1</a>');
+        return linkedtext;
+
+       }
+       function list_removed_objects(){
+        $('#imgs').empty();
+        $('#imgs').append('<h3>Removed images:</h3><table>');
+        $.each(settings.removed_images, function(index, value){
+         $.ajax({
+          url:'https://api.instagram.com/v1/media/' + value,
+          type:'get',
+          crossDomain: true,
+          dataType:'jsonp',
+          data:{'access_token':clientID, 'callback':'addsingleimageremove'}
+         });
+        });
+        $('#imgs').append('</table>')
+
+       }
+       function list_favourite_objects(){
+        $('#imgs').empty()
+        $('#imgs').append('<h3>Favourite images:</h3><table>')
+        $.each(settings.favourite_images, function(index, value){
+          $.ajax({
+            url:'https://api.instagram.com/v1/media/' + value,
+            type:'get',
+            crossDomain:true,
+            dataType:'jsonp',
+            data:{'access_token':clientID, 'callback':'addsingleimagefavourite'}
+          });
+        });
+       }
+       function populatebigimage(data){
+        $('#bigimage').empty();
+        try{
+        $('#bigimage').append('<center><h3>' + linkhashtags(data['data']['caption']['text']) + '<br><img src="' + data['data']['images']['standard_resolution']['url'] + '"><br><a href="#" class="fav_' + data['data']['id'] + '" onclick="favourite_image(event, \'' + data['data']['id'] + '\')">Favourite</a><a href="#" onclick="remove_Entry(event, \'' + data['data']['id'] + '\')">Remove</a><a href="#" onclick="closeBtn()">Close</a></center>');
+        if(jQuery.inArray(data['data']['id'], settings.favourite_images) != -1){
+          $('.fav_' + data['data']['id']).attr('onclick', 'unfavourite_image_main(event, "' + data['data']['id'] + '")');
+          $('.fav_' + data['data']['id']).text('Favourited');
+          $('.fav_' + data['data']['id']).css('background-color', '#ff0066');
+        }
+      }
+      catch(err){
+        $('#bigimage').append('<center><h3>No Caption<br><img src="' + data['data']['images']['standard_resolution']['url'] + '"><br><a href="#" class="fav_' + data['data']['id'] + '" onclick="favourite_image(event, \'' + data['data']['id'] + '\')">Favourite</a><a href="#" onclick="remove_Entry(event, \'' + data['data']['id'] + '\')">Remove</a><a href="#" onclick="closeBtn()">Close</a></h3></center>');
+        if(jQuery.inArray(data['data']['id'], settings.favourite_images) != -1){
+          $('.fav_' + data['data']['id']).attr('onclick', 'unfavourite_image_main(event, "' + data['data']['id'] + '")');
+          $('.fav_' + data['data']['id']).text('Favourited');
+          $('.fav_' + data['data']['id']).css('background-color', '#ff0066');
+        }
+      }
+       }
+       function showbigimage(id){
+        $.ajax({
+          url:'https://api.instagram.com/v1/media/' + id,
+          type:'get',
+          crossDomain:true,
+          dataType:'jsonp',
+          data:{'access_token':clientID, 'callback':'populatebigimage'}
+
+        });
+       }
+       function closeBtn(){
+        $('#bigimage').empty();
+       }
+
+       function Instagram_object(tag){
+        $('#imgs').empty();
+        $('#imgs').append('<h3>Images tagged with #' + tag + ':</h3>');
+        $.ajax({
+          url:'https://api.instagram.com/v1/tags/' + tag + '/media/recent',
+          type:'get',
+          crossDomain: true,
+          dataType:'jsonp',
+          data:{'access_token':clientID, 'callback':'put_images'}
+        });
+       }
+       $(document).ready(function(){
+           Instagram_object('developer');
+           $('#hashBtn').click(function(){
+              Instagram_object($('#hash-search').val());
+           });
+           $('#hash-search').keyup(function(event){
+              if(event.keyCode == 13){
+                Instagram_object($('#hash-search').val());
+                $('#hash-search').val('');
+              }
+           });
+           $('#closebtn').click(function(event){
+              event.preventDefault();
+              $('#bigimage').empty();
+           });
+       });
+       </script>
+       <div id="main"><div id="title"><img src="glyph3.png" id="titleIMG"><span id="titleText"><h1>DextrousFOTO</h1></span></div><br><br><br><span id='username'></span><a href="#" id='favs' onclick="list_favourite_objects()">Favourite Images</a><a href="#" id='removed' onclick="list_removed_objects()">Removed Images</a><a href="#" id='about' onclick="about_Page()">About</a><span id="searchbox">Hashtag Search:<input type="text" id="hash-search"><input type="submit" id="hashBtn" value='Search'></span><br><br><span id="bigimage"></span><br><div id="imgs"></div></div>
+   </body>
+</html>
+
