@@ -13,4 +13,4 @@ The web app server requires a configuration file in a file called settings.json 
 {"Client_Secret": "YOUR_CLIENT_SECRET", "Client_ID": "YOUR_CLIENT_ID"}
 ```
 
-The web app is currently configured to obtain the settings from my personal server and will require changing at lines 17 and 36.
+The web app is currently configured to obtain the settings from my personal server and will require changing at lines 17 and 36 of authd/site.html.
